@@ -5,12 +5,24 @@ import threading
 def handle_client(conn):
     while True:
         data = conn.recv(1024)
-        if data == b"*1\r\n$4\r\nping\r\n":
-            res = "+PONG\r\n"
-            conn.send(res.encode())
-        elif not data.decode():
+        if not data:
             conn.close()
             break
+        decoded_data = data.decode()
+
+        if decoded_data.startswith("ECHO "):
+            argument = decoded_data[5:].strip()
+            response = f"${len(argument)}\r\n{argument}\r\n"
+            conn.send(response.encode())
+        elif data == b"*1\r\n$4\r\nping\r\n":
+            res = "+PONG\r\n"
+            conn.send(res.encode())
+
+        else:
+            print("Unknown command received, closing connection.")
+            conn.close()
+            break
+        
 
 def main():
     while True:
