@@ -4,19 +4,29 @@ import threading
 
 def handle_client(conn):
     while True:
-        data = conn.recv(1024)
-        if not data:
+        try:
+            data = conn.recv(1024)
+            if not data:
+                break
+
+            decoded_data = data.decode().strip()
+            if decoded_data.startswith("ECHO"):
+                _, argument = decoded_data.split(' ', 1)
+                response = f"${len(argument)}\r\n{argument}\r\n"
+                conn.send(response.encode())
+            elif decoded_data.upper() == "PING":
+                conn.send(b"+PONG\r\n")
+            else:
+                res = "-ERR unknown command\r\n"
+                conn.send(res.encode())
+                print("Unknown command:", decoded_data)
+                break
+        except Exception as e:
+            print("Error handling the command:", e)
             conn.close()
             break
-        decoded_data = data.decode()
 
-        if decoded_data.startswith("ECHO "):
-            argument = decoded_data[5:].strip()
-            response = f"${len(argument)}\r\n{argument}\r\n"
-            conn.send(response.encode())
-        elif data == b"*1\r\n$4\r\nping\r\n":
-            res = "+PONG\r\n"
-            conn.send(res.encode())
+    conn.close()
         
 
 def main():
