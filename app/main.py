@@ -20,6 +20,7 @@ def handle_client(conn):
     while True:
         data = conn.recv(1024)
         decoded_data = data.decode().strip()
+        storage = None
         command, arguments = parse_resp_command(decoded_data)
         if command == 'PING':
             conn.send(b"+PONG\r\n")
@@ -30,11 +31,13 @@ def handle_client(conn):
         elif command == 'SET' and arguments:
             key = arguments[0]
             value = arguments[1]
+            if arguments[2:]:
+                storage = arguments[2]
             conn.send(b"+OK\r\n")
         elif command == 'GET' and arguments:
             key = arguments[0]
             value = "Hello"
-            response = f"${len(value)}\r\n{value}\r\n"
+            response = f"${len(storage)}\r\n{storage}\r\n"
             conn.send(response.encode())
         elif not data.decode():
             conn.close()
