@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 
 storege = {}
@@ -33,15 +34,24 @@ def handle_client(conn):
             key = arguments[0]
             value = arguments[1]
             storege[key] = value
+            expiry = None
+            if len(arguments) > 3 and arguments[2].upper() == "PX":
+                expiry = int(arguments[3]) + int(time.time() * 1000)
+            storege[key] = {"value": value, "expiry": expiry}
             conn.send(b"+OK\r\n")
         elif command == 'GET' and arguments:
             key = arguments[0]
-            value = storege.get(key, None)
-            if not value:
-                conn.send(b"$-1\r\n")
+            if key in storege:
+                current_time = int(time.time() * 1000)
+                if storege[key]["expiry"] is None or storege[key]["expiry"] > current_time:
+                    value = storege[key]["value"]
+                    response = f"${len(value)}\r\n{value}\r\n"
+                    conn.send(response.encode())
+                else:
+                    del storege[key]
+                    conn.send(b"$-1\r\n")
             else:
-                response = f"${len(value)}\r\n{value}\r\n"
-            conn.send(response.encode())
+                conn.send(b"$-1\r\n")
         elif not data.decode():
             conn.close()
             break
