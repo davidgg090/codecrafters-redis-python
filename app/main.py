@@ -4,19 +4,30 @@ import threading
 
 def parse_resp_command(data):
     lines = data.split('\r\n')
+    command = None
+    arguments = []
     if lines[0].startswith('*'):
         num_elements = int(lines[0][1:])
-        if lines[2] == 'ping':
-            return 'PING'
-    return None
+        for i in range(1, num_elements * 2, 2):
+            if lines[i].startswith('$'):
+                arguments.append(lines[i + 1])
+        if arguments:
+            command = arguments[0].upper()
+            arguments = arguments[1:]
+    return command, arguments
 
 def handle_client(conn):
     while True:
         data = conn.recv(1024)
         decoded_data = data.decode().strip()
-        command = parse_resp_command(decoded_data)
+        command, arguments = parse_resp_command(decoded_data)
         if command == 'PING':
             conn.send(b"+PONG\r\n")
+        elif command == 'ECHO' and arguments:
+            message = arguments[0]
+            response = f"${len(message)}\r\n{message}\r\n"
+            conn.send(response.encode())
+
 
         elif not data.decode():
             conn.close()
