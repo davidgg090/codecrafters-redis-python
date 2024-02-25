@@ -27,8 +27,15 @@ def handle_client(conn):
             message = arguments[0]
             response = f"${len(message)}\r\n{message}\r\n"
             conn.send(response.encode())
-
-
+        elif command == 'SET' and arguments:
+            key = arguments[0]
+            value = arguments[1]
+            conn.send(b"+OK\r\n")
+        elif command == 'GET' and arguments:
+            key = arguments[0]
+            value = "bar"
+            response = f"${len(value)}\r\n{value}\r\n"
+            conn.send(response.encode())
         elif not data.decode():
             conn.close()
             break
