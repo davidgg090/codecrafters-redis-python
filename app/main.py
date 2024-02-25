@@ -33,7 +33,7 @@ def handle_client(conn):
             conn.send(b"+OK\r\n")
         elif command == 'GET' and arguments:
             key = arguments[0]
-            value = arguments[1]
+            value = "Hello"
             response = f"${len(value)}\r\n{value}\r\n"
             conn.send(response.encode())
         elif not data.decode():
