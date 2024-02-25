@@ -1,3 +1,4 @@
+import logging
 import socket
 import threading
 
@@ -10,12 +11,13 @@ def handle_client(conn):
                 break
 
             decoded_data = data.decode().strip()
-            if decoded_data.startswith("ECHO"):
-                _, argument = decoded_data.split(' ', 1)
-                response = f"${len(argument)}\r\n{argument}\r\n"
-                conn.send(response.encode())
-            elif decoded_data.upper() == "PING":
+            logging.info("Received data: %s", decoded_data)
+
+            if decoded_data.upper() == "PING":
                 conn.send(b"+PONG\r\n")
+            elif decoded_data.upper().startswith("ECHO "):
+                res = decoded_data[5:] + "\r\n"
+                conn.send(res.encode())
             else:
                 res = "-ERR unknown command\r\n"
                 conn.send(res.encode())
