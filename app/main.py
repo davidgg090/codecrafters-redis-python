@@ -17,11 +17,6 @@ def handle_client(conn):
         elif data == b"*1\r\n$4\r\nping\r\n":
             res = "+PONG\r\n"
             conn.send(res.encode())
-
-        else:
-            print("Unknown command received, closing connection.")
-            conn.close()
-            break
         
 
 def main():
